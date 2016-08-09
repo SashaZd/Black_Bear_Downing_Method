@@ -3,9 +3,9 @@ from distutils.core import setup
 
 setup(
 	name='Black_Bear_Downing_Method',
-	version="1.0",
+	version="1.0.1a",
 	description="Population reconstruction of black bears using harvest data.",
-	long_description=open('README.md').read(),
+	# long_description=open('README.md').read(),
 	author="Shefali Azad",
 	author_email="azadshefali@gmail.com",
 	maintainer="Sasha Azad",
