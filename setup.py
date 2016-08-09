@@ -1,5 +1,5 @@
 # from setuptools import setup
-from distutils.core import setup
+# from distutils.core import setup
 
 setup(
 	name='Black_Bear_Downing_Method',
@@ -11,7 +11,6 @@ setup(
 	maintainer="Sasha Azad",
 	maintainer_email="sasha.azad@gatech.edu",
 	url="https://github.com/SashaZd/Black_Bear_Downing_Method",
-	packages=['downing'],
 	install_requires=[
  		'xlrd',
  		'xlwt',
