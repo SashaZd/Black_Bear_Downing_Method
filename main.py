@@ -1,6 +1,8 @@
 import os
 import xlrd, xlwt
+from copy import deepcopy
 from xlutils.copy import copy
+
 
 EXCEL_FILE_PATH = "downing.xls"
 EXCEL_FILE_PATH_TEMP = "%s_temp.xls"%(EXCEL_FILE_PATH.split(".")[0])
@@ -18,12 +20,12 @@ class BlackBear:
 		self.workbook.save(EXCEL_FILE_PATH_TEMP)
 
 		self.years, self.S, self.not_aged, self.H_t = self.getRawUncorrected_AllData()
-		self.totals = []
+		self.totals = {}
 
 
 	def getRawUncorrected_AllData(self):
 		sheet = self.book.sheet_by_name("Raw_Uncorrected")
-		
+
 		# Separately getting the years, not_aged, total from the raw data
 		years, not_aged, total = [], [], []
 		for row in range(1, sheet.nrows):
@@ -60,7 +62,7 @@ class BlackBear:
 			A_t.append((self.H_t[index] - self.not_aged[index])/self.H_t[index])
 
 		# corrected_for_sub_sampling = [Divide S1 to S17 by A_t (if no data, then 0)] ---> Round to whole number
-		corrected_for_sub_sampling = self.S
+		corrected_for_sub_sampling = deepcopy(self.S)
 		for i, row in enumerate(corrected_for_sub_sampling):
 			for j, cell in enumerate(row):
 				corrected_for_sub_sampling[i][j] = int(round(cell/A_t[i]))
@@ -128,6 +130,7 @@ class BlackBear:
 
 	def writeExcelSheet(self, collapsed, N):
 		sheet_name = "%d+ Collapsed"%(collapsed)
+
 		sheet = self.workbook.add_sheet(sheet_name)
 
 		# For Header Row
@@ -145,27 +148,38 @@ class BlackBear:
 
 		total = 0
 		for index in range(0, len(self.years)):
+			if self.years[index] not in self.totals:
+				self.totals[self.years[index]] = 0
+
 			sheet.write(index+1, 0, self.years[index])
 			col = 0
 			for col, value in enumerate(N[index]):
 				sheet.write(index+1, col+1, value)
 			total += sum(N[index])
 			sheet.write(index+1, col+2, sum(N[index]))
+			self.totals[self.years[index]] += sum(N[index])
 
-		self.totals.append(total)
 		self.workbook.save(EXCEL_FILE_PATH_TEMP)
 
 
-	def writeAverageN(self):
+	def writeAverageN(self, n):
 		sheet_name = "Average_Abundance"
 		sheet = self.workbook.add_sheet(sheet_name)
 
+		print self.totals
+
 		# For Header Row
 		h_style = xlwt.easyxf('font: bold 1')
-		sheet.write(0,0, "Average N", h_style)
+		sheet.write(0,0, "Year", h_style)
+		sheet.write(0,1, "Average N", h_style)
 
-		avg_N = sum(self.totals)/len(self.totals)
-		sheet.write(1,0, avg_N)		
+		for index, year in enumerate(self.years): 
+			sheet.write(index+1, 0, year)
+			avg_N = round(float(self.totals[year])/float(n))
+			sheet.write(index+1, 1, avg_N)
+
+		# avg_N = sum(self.totals)/len(self.totals)
+		# sheet.write(1,0, avg_N)		
 
 		self.workbook.save(EXCEL_FILE_PATH_TEMP)
 
@@ -178,7 +192,7 @@ collapse = [3,4,5]
 for each in collapse: 
 	bear.findCollapsed(each)
 
-bear.writeAverageN()
+bear.writeAverageN(len(collapse))
 
 os.remove(EXCEL_FILE_PATH)
 os.rename(EXCEL_FILE_PATH_TEMP, EXCEL_FILE_PATH)
